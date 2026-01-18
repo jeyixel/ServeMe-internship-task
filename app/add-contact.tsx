@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useContacts } from './context/ContactContext';
+import { useContacts } from '../context/ContactContext';
 
 export default function AddContact() {
   const { editId } = useLocalSearchParams<{ editId?: string | string[] }>();

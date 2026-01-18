@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useMemo } from '
 import { Alert } from 'react-native';
 
 // Only the fields we care about from the API
-type Contact = {
+export type Contact = {
   id: number;
   name: string;
   email: string;
@@ -12,12 +12,12 @@ type Contact = {
   address?: string;
 };
 
-type ContactContextType = {
+export type ContactContextType = {
   contacts: Contact[];
   loading: boolean;
   addContact: (name: string, email: string, phone: string) => Promise<void>;
   deleteContact: (id: number) => Promise<void>;
-  updateContact: (id: number, updates: Partial<Contact>) => Promise<void>; // <--- new sus update function
+  updateContact: (id: number, updates: Partial<Contact>) => Promise<void>;
 };
 
 const ContactContext = createContext<ContactContextType | null>(null);
@@ -67,7 +67,6 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
   // 2. CREATE: Fake add
   const addContact = async (name: string, email: string, phone: string) => {
     try {
-      // API Call (Fake)
       const response = await fetch('https://jsonplaceholder.typicode.com/users', {
         method: 'POST',
         body: JSON.stringify({ name, email, phone }),
@@ -75,8 +74,7 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
       });
       if (!response.ok) throw new Error(`Create failed: ${response.status}`);
       const created = await response.json();
-      
-      // Local State Update (Real UI change), because API doesn't store the data
+
       const newContact: Contact = {
         id: created?.id ?? Date.now(),
         name,
@@ -88,7 +86,7 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
           ? `${created.address.street}, ${created.address.city} ${created.address.zipcode}`
           : undefined,
       };
-      setContacts((prev) => [newContact, ...prev]); // Update local state immediately
+      setContacts((prev) => [newContact, ...prev]);
     } catch (error) {
       const message = (error as Error)?.message || 'Could not add contact';
       Alert.alert('Error', message);
@@ -112,21 +110,16 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
   // 4. UPDATE: Fake update
   const updateContact = async (id: number, updates: Partial<Contact>) => {
     try {
-      // API Call (Fake PATCH)
       const response = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
         headers: { 'Content-type': 'application/json' },
       });
-      
+
       if (!response.ok) throw new Error(`Update failed: ${response.status}`);
-      
-      // Local State Update
-      // We manually merge the "updates" into the existing contact in our list
-      setContacts((prev) => 
-        prev.map((contact) => 
-          contact.id === id ? { ...contact, ...updates } : contact
-        )
+
+      setContacts((prev) =>
+        prev.map((contact) => (contact.id === id ? { ...contact, ...updates } : contact))
       );
     } catch (error) {
       const message = (error as Error)?.message || 'Could not update contact';
@@ -139,11 +132,7 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
     [contacts, loading]
   );
 
-  return (
-    <ContactContext.Provider value={value}>
-      {children}
-    </ContactContext.Provider>
-  );
+  return <ContactContext.Provider value={value}>{children}</ContactContext.Provider>;
 };
 
 export const useContacts = (): ContactContextType => {

@@ -10,7 +10,7 @@ import {
   StatusBar 
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { useContacts } from './context/ContactContext'; // Ensure this path matches your folder structure
+import { useContacts } from '../context/ContactContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ContactListScreen() {

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useContacts } from '../context/ContactContext';
+import { useContacts } from '../../context/ContactContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ContactDetails() {
