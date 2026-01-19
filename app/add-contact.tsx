@@ -55,7 +55,7 @@ export default function AddContact() {
       if (existingContact) {
         await updateContact(existingContact.id, { name, email, phone, website, company, address });
       } else {
-        await addContact(name, email, phone);
+        await addContact({ name, email, phone, website, company, address });
       }
       router.back();
     } catch (error) {

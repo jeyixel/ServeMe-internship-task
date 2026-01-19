@@ -15,7 +15,7 @@ export type Contact = {
 export type ContactContextType = {
   contacts: Contact[];
   loading: boolean;
-  addContact: (name: string, email: string, phone: string) => Promise<void>;
+  addContact: (contact: Omit<Contact, 'id'>) => Promise<void>;
   deleteContact: (id: number) => Promise<void>;
   updateContact: (id: number, updates: Partial<Contact>) => Promise<void>;
 };
@@ -46,9 +46,13 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
       const response = await fetch('https://jsonplaceholder.typicode.com/users', { signal });
       if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
 
+      // waiting for jsonplaceholder to return data
       const data = await response.json();
+      // normalize data
       const normalized = Array.isArray(data) ? data.map(mapUserToContact) : [];
+      // update state
       setContacts(normalized);
+      
     } catch (error: any) {
       if (error?.name === 'AbortError') return; // ignore aborts
       const message = error?.message || 'Failed to fetch contacts';
@@ -58,6 +62,7 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
     }
   };
 
+  // Fetch contacts on mount
   useEffect(() => {
     const controller = new AbortController();
     fetchContacts(controller.signal);
@@ -65,28 +70,24 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
   }, []);
 
   // 2. CREATE: Fake add
-  const addContact = async (name: string, email: string, phone: string) => {
+  const addContact = async (contact: Omit<Contact, 'id'>) => {
     try {
       const response = await fetch('https://jsonplaceholder.typicode.com/users', {
         method: 'POST',
-        body: JSON.stringify({ name, email, phone }),
+        body: JSON.stringify(contact),
         headers: { 'Content-type': 'application/json' },
       });
       if (!response.ok) throw new Error(`Create failed: ${response.status}`);
-      const created = await response.json();
+      const created = await response.json(); // parses JSON response into native JavaScript objects
 
       const newContact: Contact = {
         id: created?.id ?? Date.now(),
-        name,
-        email,
-        phone,
-        website: created?.website,
-        company: created?.company?.name,
-        address: created?.address
-          ? `${created.address.street}, ${created.address.city} ${created.address.zipcode}`
-          : undefined,
+        ...contact,
       };
-      setContacts((prev) => [newContact, ...prev]);
+
+      // console.log('Created contact:', newContact); // debugging log
+      
+      setContacts((prev) => [newContact, ...prev]); // adds a new contact to the top of the previous list
     } catch (error) {
       const message = (error as Error)?.message || 'Could not add contact';
       Alert.alert('Error', message);
@@ -100,7 +101,7 @@ export const ContactProvider = ({ children }: { children: React.ReactNode }) => 
       if (!response.ok && response.status !== 200 && response.status !== 204) {
         throw new Error(`Delete failed: ${response.status}`);
       }
-      setContacts((prev) => prev.filter((c) => c.id !== id));
+      setContacts((prev) => prev.filter((c) => c.id !== id)); // removes the deleted contact from the list
     } catch (error) {
       const message = (error as Error)?.message || 'Could not delete contact';
       Alert.alert('Error', message);
